@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نموذج الحجز</title>
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; background:#0d6efd; margin:0; height:100vh; display:flex; align-items:center; justify-content:center; }
+    .container { width:380px; background:#fff; border-radius:12px; padding:22px; text-align:center; box-shadow:0 6px 14px rgba(0,0,0,.2); }
+    .hint { color:#555; margin-bottom:10px; }
+    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:8px; box-sizing: border-box; }
+    button { width:100%; padding:12px; border:0; border-radius:8px; background:#0d6efd; color:#fff; font-weight:700; cursor:pointer; }
+    button:hover { background: #0b5ed7; }
+    .success-box { background: #e8f5e9; border: 2px dashed #4caf50; padding: 15px; border-radius: 8px; text-align: right; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>نموذج الحجز</h2>
+    <p id="catInfo" class="hint"></p>
+  
+    <form id="bookingForm">
+      <input type="text" name="fullname" id="fullname" placeholder="الاسم الكامل" required>
+      <input type="text" name="nationalId" id="nationalId" placeholder="رقم الهوية" required>
+      <input type="text" name="phone" id="phone" placeholder="رقم الهاتف" required>
+      <button type="submit">تأكيد الحجز</button>
+    </form>
+  
+    <div id="msg"></div>
+  </div>
+  
+  <script>
+    const cat = localStorage.getItem("category") || "عامة";
+    const price = localStorage.getItem("price") || "50";
+    document.getElementById("catInfo").innerText = `الفئة: ${cat} | السعر: ${price} ريال`;
+
+    document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const formData = {
+        fullname: document.getElementById("fullname").value,
+        nationalId: document.getElementById("nationalId").value,
+        phone: document.getElementById("phone").value,
+        category: cat
+      };
+
+      try {
+        const response = await fetch('/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // عرض النتائج مباشرة وبشكل سليييم يمنع الـ undefined
+          document.querySelector(".container").innerHTML = `
+            <h2 style="color: #27ae60;">🎉 تم الحجز بنجاح!</h2>
+            <div class="success-box">
+              <p><strong>رقم الحجز:</strong> #${result.id}</p>
+              <p><strong>الاسم:</strong> ${result.fullname}</p>
+              <p><strong>الهوية:</strong> ${result.nationalId}</p>
+              <p><strong>الهاتف:</strong> ${result.phone}</p>
+              <p><strong>الفئة:</strong> ${result.category}</p>
+              <p><strong>رقم المقعد:</strong> ${result.seat}</p>
+            </div>
+            <br>
+            <a href="index.html" style="display:inline-block; padding:10px 20px; background:#0d6efd; color:white; text-decoration:none; border-radius:5px;">العودة للرئيسية</a>
+          `;
+        } else {
+          alert(result.message || "حدث خطأ ما");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("تعذر الاتصال بالخادم");
+      }
+    });
+  </script>
+</body>
+</html>
